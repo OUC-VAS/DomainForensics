@@ -1,0 +1,6 @@
+opencv-python
+numpy
+easydict
+pytorch-lightning==1.7.5
+rich
+matplotlib
