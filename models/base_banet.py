@@ -24,8 +24,6 @@ class BaseFaceAdaptation(pl.LightningModule):
         self.discriminator = Discriminator(input_dim=feat_dim * 2, hidden_dim=self.hparams.cfg.MODEL.DISCRIMINATOR_MIDDIM, out_dim=1)
         self.gobal_i = 0
         self.automatic_optimization = False
-        self.use_proto_align = False
-        self.local_alignment = self.hparams.cfg.MODEL.LOCAL_ALIGNMENT
 
     def forward(self, x):
         _, out, _ = self.backbone(x)
@@ -39,18 +37,7 @@ class BaseFaceAdaptation(pl.LightningModule):
     def on_train_start(self) -> None:
         if self.global_rank == 0:
             print('Transfer from ', self.hparams.cfg.DATAS.SOURCE, ' to ----------- ', self.hparams.cfg.DATAS.TARGET)
-        # define feature queue only for target domain
-        if self.local_alignment:
-            self.queue_size = self.hparams.cfg.MODEL.QUEUE_SIZE
-            proj_dim = self.hparams.cfg.MODEL.CLASSIFICATION_FEATURE
 
-            self.queue_target = torch.zeros(
-                self.queue_size, proj_dim
-            ).cuda()
-            self.queue_ptr = torch.zeros(1, dtype=torch.long).cuda()
-            self.queue_target.require_grad = False
-            self.queue_ptr.require_grad = False
-        #
         if self.hparams.cfg.DOMAIN_FINETUNING.ENABLE:
             feat_dim = self.hparams.cfg.MODEL.CLASSIFICATION_FEATURE
             print("Creating the Snap model for self-distillation ... ")
@@ -59,8 +46,6 @@ class BaseFaceAdaptation(pl.LightningModule):
             self.model_snap.net.cuda().eval()
 
     def domain_finetume(self, s_x, s_y, t_x, t_y, s_ycbcr=None, t_ycbcr=None):
-        # data
-        # tx - t_y~
         if self.hparams.cfg.DOMAIN_FINETUNING.DISCRIMINATOR:
             opt, opt_d = self.optimizers()
         else:
@@ -75,16 +60,11 @@ class BaseFaceAdaptation(pl.LightningModule):
 
         if self.hparams.cfg.DATAS.WITH_FREQUENCY:
             if self.hparams.cfg.DOMAIN_FINETUNING.DISCRIMINATOR:
-                if self.use_proto_align:
-                    total_loss, distill_loss, disc_loss, proto_loss = self.model.get_finetune_loss(s_x=s_x, s_y=s_y, t_x=t_x,
-                                                                                       t_y=outputs,
-                                                                                       s_ycbcr=s_ycbcr, t_ycbcr=t_ycbcr,
-                                                                                       discriminator=self.discriminator, lbl_target=t_y)
-                else:
-                    total_loss, distill_loss, disc_loss, t_ce_loss = self.model.get_finetune_loss(s_x=s_x, s_y=s_y, t_x=t_x, t_y=outputs,
-                                                                                       s_ycbcr=s_ycbcr, t_ycbcr=t_ycbcr,
-                                                                                       discriminator=self.discriminator,
-                                                                                       lbl_target=t_y, return_ce=True)
+
+                total_loss, distill_loss, disc_loss, t_ce_loss = self.model.get_finetune_loss(s_x=s_x, s_y=s_y, t_x=t_x, t_y=outputs,
+                                                                                    s_ycbcr=s_ycbcr, t_ycbcr=t_ycbcr,
+                                                                                    discriminator=self.discriminator,
+                                                                                    lbl_target=t_y, return_ce=True)
             else:
                 total_loss, distill_loss = self.model.get_finetune_loss(s_x=s_x, s_y=s_y, t_x=t_x, t_y=outputs,
                                                                         s_ycbcr=s_ycbcr, t_ycbcr=t_ycbcr)
@@ -97,9 +77,6 @@ class BaseFaceAdaptation(pl.LightningModule):
         self.manual_backward(total_loss)
         opt.step()
         opt.zero_grad()
-        # single scheduler
-        # sch = self.lr_schedulers()
-        # sch.step()
 
         if self.hparams.cfg.DOMAIN_FINETUNING.DISCRIMINATOR:
             opt_d.zero_grad()
@@ -216,11 +193,10 @@ class BaseFaceAdaptation(pl.LightningModule):
                     self.discriminator.parameters(), lr=self.hparams.cfg.DOMAIN_FINETUNING.LR * 0.1,
                     momentum=0.9, nesterov=True, weight_decay=0.0005
                 )
-            # scheduler = torch.optim.lr_scheduler.LambdaLR(optim, lambda x: self.hparams.cfg.TRAINING.LR * (1. + 0.001 * float(x)) ** (-0.75))
             scheduler = torch.optim.lr_scheduler.LambdaLR(optim, lambda_func)
 
         if self.hparams.cfg.DOMAIN_FINETUNING.DISCRIMINATOR:
-            return [optim, opt_d], [scheduler] #, opt_d
+            return [optim, opt_d], [scheduler]
         else:
             return [optim], [scheduler]
 
@@ -279,7 +255,6 @@ class BaseFaceAdaptation(pl.LightningModule):
                 freq_x = freq_x[0]
             feat, y_hat = self.backbone(x, freq_x)
             y_hat = F.softmax(y_hat, dim=-1)
-            # pred = torch.max(y_hat, dim=1)[1]
             scores, preds = torch.max(y_hat, dim=1)
             scores = y_hat[:, 1]
             pred = (scores > 0.5).int()
@@ -291,7 +266,6 @@ class BaseFaceAdaptation(pl.LightningModule):
             }
 
     def _eval_results(self, outputs, save_pth=False, mode='train'):
-        # TODO: complete auc and other evaluation metric
         all_preds = torch.cat([_['pred'] for _ in outputs])
         all_labels = torch.cat([_['label'] for _ in outputs])
         all_scores = torch.cat([_['scores'] for _ in outputs])
@@ -334,13 +308,9 @@ class BaseFaceAdaptation(pl.LightningModule):
         return self._model_predict(batch, batch_idx, mode='test')
 
     def test_epoch_end(self, test_step_outputs):
-        self._eval_results(test_step_outputs, save_pth=True)
+        self._eval_results(test_step_outputs, save_pth=False)
 
     def on_load_checkpoint(self, checkpoint) -> None:
         checkpoint['hyper_parameters']['cfg'].defrost()
         checkpoint['hyper_parameters']['cfg'].DATAS.ROOT_CELEB = '/home/og/home/lqx/datasets/Celeb-DF/Celeb-DF-v2'
-        # checkpoint['hyper_parameters']['cfg'].MODEL.FREQ_DEPTH = 4
-        # checkpoint['hyper_parameters']['cfg'].MODEL.FREQ_CHANNEL = 768
-        # checkpoint['hyper_parameters']['cfg'].DATAS.SOURCE_QUALITY = 'c23'
-        # checkpoint['hyper_parameters']['cfg'].DATAS.TARGET_QUALITY = 'c23'
         return checkpoint

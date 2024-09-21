@@ -40,9 +40,6 @@ class BaseFaceAdaptation(pl.LightningModule):
             s_x, s_ycbcr, s_y = batch_s
         else:
             s_x, s_y = batch_s
-            # s_x_real, s_x_fake = batch_s
-            # s_x = torch.cat([s_x_real, s_x_fake], dim=0)
-            # s_y = torch.cat([torch.zeros(s_x_real.size()[0]), torch.ones(s_x_real.size()[0])]).to(s_x.device).long()
 
         if self.hparams.cfg.DATAS.WITH_FREQUENCY:
             total_loss = self.model.get_loss(inputs_source=s_x, labels_source=s_y, inputs_s_ycbcr=s_ycbcr)

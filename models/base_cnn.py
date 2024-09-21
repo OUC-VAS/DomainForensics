@@ -81,9 +81,6 @@ class BaseFaceAdaptation(pl.LightningModule):
         self.manual_backward(total_loss)
         opt.step()
         opt.zero_grad()
-        # single scheduler
-        # sch = self.lr_schedulers()
-        # sch.step()
 
         if self.hparams.cfg.DOMAIN_FINETUNING.DISCRIMINATOR:
             opt_d.zero_grad()

@@ -1,5 +1,4 @@
 import os.path
-import torch
 
 from models.base_banet import BaseFaceAdaptation
 from datasets.loaders import FaceAdaptationLoaders
@@ -53,7 +52,7 @@ if __name__ == '__main__':
 
     model_save_path = os.path.join(cfg.LOG.ROOT, 'save_models', model_name)
 
-    ffloaders = FaceAdaptationLoaders(cfg=cfg, quality='c23', source_only=False, gpus=gpus)
+    ffloaders = FaceAdaptationLoaders(cfg=cfg, quality=cfg.DATAS.SOURCE_QUALITY, source_only=False, gpus=gpus)
     model = BaseFaceAdaptation(cfg)
     
     trainer = TrainerManager(gpus=gpus, cfg=cfg, save_path=model_save_path)

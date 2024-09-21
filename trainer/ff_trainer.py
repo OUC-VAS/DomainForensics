@@ -60,9 +60,6 @@ class TrainerManager():
 
     def single_gpu_eval(self, model, data_module):
         pass
-        #
-        # trainer = Trainer(gpus=self.gpus, accelerator="gpu")
-        # trainer.test(model, datamodule=data_module)
 
     def single_gpu_test(self, model, data_module):
         trainer = Trainer(devices=self.gpus, accelerator="gpu", logger=False)# , callbacks=[RichProgressBar()]

@@ -21,6 +21,7 @@ if __name__ == '__main__':
 
     cfg.MODEL.FREQ_DEPTH = 4
     cfg.MODEL.FREQ_CHANNEL = 768
+    # e.g. cfg.TESTING.MODEL_WEIGHT = 'version_1/checkpoints/epoch=14-step=10770.ckpt'
     cfg.TESTING.MODEL_WEIGHT = 'path_to_model'
 
 
