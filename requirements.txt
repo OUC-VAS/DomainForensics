@@ -5,3 +5,4 @@ easydict
 pytorch-lightning==1.7.5
 rich
 matplotlib
+albumentations==1.3.0

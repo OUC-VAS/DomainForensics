@@ -1,5 +1,3 @@
-import sys
-sys.path.append('/home/og/home/lqx/code/FaceAdaptation')
 import os
 import json
 import numpy as np

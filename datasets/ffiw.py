@@ -1,5 +1,3 @@
-import sys
-sys.path.append('/home/og/home/lqx/code/FaceAdaptation')
 import os
 import glob
 import torch
@@ -11,7 +9,6 @@ import torchvision.transforms as tfm
 from torch.utils.data import Dataset
 from datasets.dct_transforms import get_dct_transform
 import json
-
 
 
 def get_ffiw_mode_list(root, mode='train'):
