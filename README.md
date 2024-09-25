@@ -4,7 +4,7 @@
 >
 > [DomainForensics: Exposing Face Forgery Across Domains via Bi-Directional Adaptation](https://ieeexplore.ieee.org/abstract/document/10601589)
 > 
-> Qingxuan Lv; Yuezun Li; Junyu Dong; Sheng Chen; Hui Yu; Huiyu Zhou; Shu Zhang
+> Qingxuan Lv; Yuezun Li*; Junyu Dong*; Sheng Chen; Hui Yu; Huiyu Zhou; Shu Zhang
 > 
 > IEEE Transactions on Information Forensics and Security
 
