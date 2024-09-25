@@ -59,6 +59,14 @@ run training by executing `python train.py`
 1. Change the `cfg.TESTING.MODEL_WEIGHT` to the pretrained weight
 2. run testing by executing `python testing.py`
 
+## Pretrained Models
+
+|Task|Dataset|AUC|Model|Size|
+|:-:|:-:|:-:|:-:|:-:|
+|FaceSwap -> Face2Face| FF++ | 99.13 | [google drive](https://drive.google.com/file/d/1XwXDSq5XlH1XlBdmbZnGKIttbnAGsO5l/view?usp=sharing)| 855MB |
+| NeuralTextures -> FaceSwap| FF++ | 97.67 | [google drive](https://drive.google.com/file/d/1sUG6vXBfHTMzIKNu_9ewxGINgdKP-SDv/view?usp=sharing)| 855MB |
+
+
 
 # Citation
 ```
